@@ -1,19 +1,24 @@
-from bs4 import BeautifulSoup
-from selenium import webdriver
-
-EXECUTABLE_PATH = "C:/Users/me/Downloads/geckodriver-v0.29.1-win64/geckodriver.exe"
+import bs4
+from . import extractor
 
 
-class UGChordExtractor:
-    def __init__(self) -> None:
-        self.driver = webdriver.Firefox(executable_path=EXECUTABLE_PATH)
+class UGSongUrlsExtractor(extractor.Extractor):
+    def extract_song_urls_from_url(self, url):
 
-    def __enter__(self):
-        return self
+        self.driver.get(url)
 
-    def __exit__(self, type, value, traceback):
-        self.driver.close()
+        links = self.driver.find_elements_by_tag_name("a")
 
+        urls = [
+            link.get_attribute("href")
+            for link in links
+            if "/tab/" in link.get_attribute("href")
+        ]
+
+        return urls
+
+
+class UGChordExtractor(extractor.Extractor):
     def extract_chords_from_url(self, url):
 
         self.driver.get(url)
@@ -24,7 +29,7 @@ class UGChordExtractor:
         return normal_chords, simplified_chords
 
     def extract_chords_from_ug_page_source(self):
-        soup = BeautifulSoup(self.driver.page_source, "html.parser")
+        soup = bs4.BeautifulSoup(self.driver.page_source, "html.parser")
         chord_spans = soup.find_all(attrs={"data-name": True})
         chords = [x.attrs["data-name"] for x in chord_spans]
         return chords
