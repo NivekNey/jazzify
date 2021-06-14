@@ -15,5 +15,6 @@ setup(
         "selenium",
         "joblib",
         "pandas",
+        "tensorflow",
     ],
 )

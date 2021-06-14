@@ -30,10 +30,10 @@ def create_data(
 
     def fn(url_batch):
         with ug.UGChordExtractor() as ext:
-            chords = dict()
+            chords = []
             for url in url_batch:
                 try:
-                    chords[url] = ext.extract_chords_from_url(url)
+                    chords.append(ext.extract_chords_from_url(url))
                 except:
                     print(f"failed {url}")
         return chords
@@ -41,19 +41,12 @@ def create_data(
     chord_batches = joblib.Parallel(n_jobs=parallelism)(
         joblib.delayed(fn)(url_batch) for url_batch in url_batches
     )
-    chords = dict(x for xs in chord_batches for x in xs.items())
+    chords = list(x for xs in chord_batches for x in xs)
     print(f"{len(chords)} songs extracted")
 
     # save data
 
-    pd.DataFrame(
-        dict(
-            source=source,
-            progression=",".join(progression),
-            simple_progression=",".join(simple_progression),
-        )
-        for source, (progression, simple_progression) in chords.items()
-    ).to_csv(output_path, index=False, sep="\t")
+    pd.DataFrame(chords).to_csv(output_path, index=False, sep="\t")
 
 
 if __name__ == "__main__":
